@@ -1,0 +1,7 @@
+# environment variables
+.env
+
+#ssl certificates
+ca.pem
+
+
