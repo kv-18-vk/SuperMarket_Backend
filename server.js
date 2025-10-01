@@ -19,6 +19,20 @@ db.connect((err) => {
 app.get('/', (req, res) => {
     res.json('Hello this is the backend');
 });
+app.post('/login', express.json(), (req, res) => {
+    const data = req.body;
+    const q = 'SELECT name, designation FROM employee WHERE employee_id = ? AND password = ? AND designation IN ("manager","cashier","admin")';
+    const values = [data.employee_id, data.password];
+    db.query(q, values, (err, rows) => {
+        if (err) {
+            return res.send("Error occured: "+err);
+        }
+        if(rows.length === 0){
+            return res.send({msg:"Invalid"});
+        }
+        return res.send({msg:"Valid", name:rows[0].name, designation:rows[0].designation});
+    });
+});
 app.get('/staff', (req, res) => {
     const q = 'SELECT * FROM employee'; 
     db.query(q, (err, rows,fields) => {
