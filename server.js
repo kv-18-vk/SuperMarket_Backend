@@ -25,12 +25,12 @@ app.post('/login', express.json(), (req, res) => {
     const values = [data.employee_id, data.password];
     db.query(q, values, (err, rows) => {
         if (err) {
-            return res.send("Error occured: "+err);
+            return res.json("Error occured: "+err);
         }
         if(rows.length === 0){
-            return res.send({msg:"Invalid"});
+            return res.json({msg:"Invalid"});
         }
-        return res.send({msg:"Valid", name:rows[0].name, designation:rows[0].designation});
+        return res.json({msg:"Valid", name:rows[0].name, designation:rows[0].designation});
     });
 });
 app.get('/staff', (req, res) => {
