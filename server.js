@@ -21,8 +21,8 @@ app.get('/', (req, res) => {
 });
 app.post('/login', express.json(), (req, res) => {
     const data = req.body;
-    const q = 'SELECT name, designation FROM employee WHERE employee_id = ? AND password = ? AND designation IN ("manager","cashier","admin")';
-    const values = [data.employee_id, data.password];
+    const q = 'SELECT name, designation FROM employee WHERE employee_id = ? AND password = ? AND designation IN (?, ?, ?)';
+    const values = [data.employee_id, data.password,'manager','cashier','admin'];
     db.query(q, values, (err, rows) => {
         if (err) {
             return res.json("Error occured: "+err);
