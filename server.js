@@ -74,6 +74,28 @@ app.post('/staff/addemployee', express.json(), (req, res) => {
         return res.send("Employee added successfully");
     });
 });
+app.post('/suppliers/Add', express.json(), (req, res) => {
+    const data = req.body;
+    const q = 'INSERT INTO supplier (supplier_id, s_name, category, contact_no) VALUES (?, ?, ?, ?)';
+    const values = [data.id, data.name, data.cat, data.cont];
+    db.query(q, values, (err, result) => {
+        if (err){
+            return res.send("Error occured: "+err);
+        }
+        return res.send("Supplier added successfully");
+    });
+});
+app.post('/deliveries/Add', express.json(), (req, res) => {
+    const data = req.body;
+    const q = 'INSERT INTO delivery (supplier_id,employee_id,product_name,quantity,cp,expenses) VALUES (?, ?, ?, ?, ?, ?)';
+    const values = [data.supp,data.emp,data.name,data.quantity,data.cp,data.expenses];
+    db.query(q, values, (err, result) => {
+        if (err){
+            return res.send("Error occured: "+err);
+        }
+        return res.send("Entry Successfully");
+    });
+});
 app.post('/staff/deleteemployee', express.json(), (req, res) => {
     const data = req.body;
     const q = 'DELETE FROM employee WHERE employee_id = ?';
