@@ -35,7 +35,7 @@ app.post('/login', express.json(), (req, res) => {
 });
 app.get('/staff', (req, res) => {
     const q = 'SELECT * FROM employee'; 
-    db.query(q, (err, rows,fields) => {
+    db.query(q, (err, rows) => {
         if (err) {
             console.log('Error fetching employee data:', err);
             return res.send(err);
@@ -43,7 +43,26 @@ app.get('/staff', (req, res) => {
         return res.json(rows);
     });
 });
-
+app.get('/suppliers', (req, res) => {
+    const q = 'SELECT * FROM supplier'; 
+    db.query(q, (err, rows) => {
+        if (err) {
+            console.log('Error fetching employee data:', err);
+            return res.send(err);
+        }
+        return res.json(rows);
+    });
+});
+app.get('/deliveries', (req,res) => {
+    const q = 'SELECT * FROM delivery ORDER BY product_id DESC';
+    db.query(q, (err,rows) => {
+        if (err) {
+            console.log('Error fetching delivery data:', err);
+            return res.send(err);
+        }
+        return res.json(rows);
+    })
+})
 app.post('/staff/addemployee', express.json(), (req, res) => {
     const data = req.body;
     const q = 'INSERT INTO employee (employee_id, name, designation, Daily_wage, password) VALUES (?, ?, ?, ?, ?)';
