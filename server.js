@@ -87,24 +87,46 @@ app.post('/suppliers/Add', express.json(), (req, res) => {
 });
 app.post('/deliveries/Add', express.json(), (req, res) => {
     const data = req.body;
-    const q = 'INSERT INTO delivery (supplier_id,employee_id,product_name,quantity,cp,expenses) VALUES (?, ?, ?, ?, ?, ?)';
-    const q1 = 'INSERT INTO products (quantity_present,sp,expiry_date) VALUES (? ,? ,?)';
-    const values = [data.supp,data.emp,data.name,data.quantity,data.cp,data.expenses];
-    const values1 = [data.quantity,data.sp,data.exp];
-    db.query(q, values, (err, result) => {
-        if (err){
-            return res.send("Error occured for entry: "+err);
-        }
-        res.send("Delivery Entry Successful");
-        db.query(q1, values1 , (err,result1)=>{
-            if(err){
-                return res.send("Error occured for stock entry:"+ err);
-            }
-            res.send("stock entry successful");
-        })
-    });
 
+    db.beginTransaction((err) => {
+        if (err) {
+            return res.send("Error: " + err);
+        }
+
+        const q = 'INSERT INTO delivery (supplier_id, employee_id, product_name, quantity, cp, expenses) VALUES (?, ?, ?, ?, ?, ?)';
+        const values = [data.supp, data.emp, data.name, data.quantity, data.cp, data.expenses];
+
+        db.query(q, values, (err, result) => {
+            if (err) {
+                return db.rollback(() => {
+                    res.send("Error occured for delivery entry: " + err);
+                });
+            }
+
+            const newProductId = result.insertId;  
+            const q1 = 'INSERT INTO products (product_id, quantity_present, sp, expiry_date) VALUES (?, ?, ?, ?)';
+            const values1 = [newProductId, data.quantity, data.sp, data.exp];
+
+            db.query(q1, values1, (err, result1) => {
+                if (err) {
+                    return db.rollback(() => {
+                        res.send("Error occured for stock entry: " + err);
+                    });
+                }
+
+                db.commit((err) => {
+                    if (err) {
+                        return db.rollback(() => {
+                            res.send("commit error: " + err);
+                        });
+                    }
+                    res.send("Delivery & Stock entry successful");
+                });
+            });
+        });
+    });
 });
+
 app.post('/staff/deleteemployee', express.json(), (req, res) => {
     const data = req.body;
     const q = 'DELETE FROM employee WHERE employee_id = ?';
