@@ -63,6 +63,26 @@ app.get('/deliveries', (req,res) => {
         return res.json(rows);
     })
 })
+app.get('/stock', (req,res) => {
+    const q = 'SELECT * FROM products';
+    db.query(q, (err,rows) => {
+        if (err) {
+            console.log('Error fetching stock data:', err);
+            return res.send(err);
+        }
+        return res.json(rows);
+    })
+})
+app.get('/expired', (req,res) => {
+    const q = 'SELECT * FROM expired';
+    db.query(q, (err,rows) => {
+        if (err) {
+            console.log('Error fetching expiry data:', err);
+            return res.send(err);
+        }
+        return res.json(rows);
+    })
+})
 app.post('/staff/addemployee', express.json(), (req, res) => {
     const data = req.body;
     const q = 'INSERT INTO employee (employee_id, name, designation, Daily_wage, password) VALUES (?, ?, ?, ?, ?)';
