@@ -103,9 +103,8 @@ app.post('/deliveries/Add', express.json(), (req, res) => {
                 });
             }
 
-            const newProductId = result.insertId;  
-            const q1 = 'INSERT INTO products (product_id, quantity_present, sp, expiry_date) VALUES (?, ?, ?, ?)';
-            const values1 = [newProductId, data.quantity, data.sp, data.exp];
+            const q1 = 'INSERT INTO products ( quantity_present, sp, expiry_date) VALUES ( ?, ?, ?)';
+            const values1 = [ data.quantity, data.sp, data.exp];
 
             db.query(q1, values1, (err, result1) => {
                 if (err) {
