@@ -64,7 +64,7 @@ app.get('/deliveries', (req,res) => {
     })
 })
 app.get('/stock', (req,res) => {
-    const q = 'SELECT * FROM products';
+    const q = 'SELECT d.product_name,p.quantity_present,p.sp,p.discount_in_percent,p.expiry_date FROM products p JOIN delivery d ON p.product_id = d.product_id;';
     db.query(q, (err,rows) => {
         if (err) {
             console.log('Error fetching stock data:', err);
