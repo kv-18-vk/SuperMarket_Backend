@@ -162,6 +162,7 @@ app.post('/staff/deleteemployee', express.json(), (req, res) => {
 });
 
 
+<<<<<<< HEAD
 app.post("/makebill", (req, res) => {
   const items = req.body.items;
 
@@ -202,4 +203,8 @@ app.post("/makebill", (req, res) => {
 
 app.listen(3000, () => {
   console.log('Server is - is running on port 3000');
+=======
+app.listen(3000, () => {
+  console.log('Server running on port 3000 .');
+>>>>>>> c93080e929d0a3fd0b58481f9dfe7476a19f2461
 });
