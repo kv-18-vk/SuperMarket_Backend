@@ -184,7 +184,7 @@ app.post('/makebill', express.json(), (req, res) => {
 
       const bill = items.map((item) => {
         const p = results.find(prod => prod.product_id == item.product_id);
-        if (!p) return { product_id: item.product_id, error: "Not found" };
+        if (!p) return { product_id: item.product_id, product_name: "Not found" };
 
         const qty = parseInt(item.quantity);
         const discount = p.discount_in_percent || 0;
