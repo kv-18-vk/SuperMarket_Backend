@@ -168,7 +168,7 @@ app.post("/makebill", (req, res) => {
 
   const query = `SELECT product_id, product_name, sp, discount_in_percent FROM products AS p JOIN delivery AS d ON p.product_id = d.product_id WHERE p.product_id IN (?)`;
 
-  db.query(query, [ids], (err, results) => {
+  db.query(query, ids, (err, results) => {
     if (err) {
       return res.send( "error:" + err );
     }
