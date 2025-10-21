@@ -161,7 +161,7 @@ app.post('/staff/deleteemployee', express.json(), (req, res) => {
     });
 });
 
-app.post("/makebill", (req, res) => {
+app.post('/makebill', (req, res) => {
   const items = req.body.items;
 
   const ids = items.map(item => item.product_id);
