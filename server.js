@@ -162,6 +162,44 @@ app.post('/staff/deleteemployee', express.json(), (req, res) => {
 });
 
 
+app.post("/makebill", (req, res) => {
+  const items = req.body.items;
+
+  const ids = items.map(item => item.product_id);
+
+  const query = `SELECT product_id, product_name, sp, discount_in_percent FROM products AS p JOIN delivery AS d ON p.product_id = d.product_id WHERE p.product_id IN (?)`;
+
+  db.query(query, [ids], (err, results) => {
+    if (err) {
+      return res.send( "error:" + err );
+    }
+
+    const bill = items.map((item) => {
+      const p = results.find(prod => prod.product_id == item.product_id);
+
+      const qty = parseInt(item.quantity);
+      const discount = p.discount_in_percent;
+      const total = p.sp * qty;
+      const final_price = total - (total * discount / 100);
+
+      return {
+        product_name: p.product_name,
+        quantity: qty,
+        price: p.sp,
+        discount: discount,
+        final_price: final_price
+      };
+    });
+
+    res.json(bill);
+  });
+});
+
+
+
+
+
+
 app.listen(3000, () => {
   console.log('Server is - is running on port 3000');
 });
