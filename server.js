@@ -164,10 +164,6 @@ app.post('/staff/deleteemployee', express.json(), (req, res) => {
 app.post('/makebill', express.json(), (req, res) => {
   try {
     const items = req.body.items;
-    if (!items || items.length === 0) {
-      return res.status(400).json({ error: "No items provided" });
-    }
-
     const ids = items.map(item => item.product_id);
 
     const query = `
@@ -203,7 +199,6 @@ app.post('/makebill', express.json(), (req, res) => {
       res.json(bill);
     });
   } catch (e) {
-    console.error("Server error:", e);
     res.status(500).json({ error: "Internal server error", details: e.message });
   }
 });
