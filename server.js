@@ -204,6 +204,53 @@ app.post('/makebill', express.json(), (req, res) => {
   }
 });
 
+app.post('/payment', express.json(), (req, res) => {
+
+  const items = req.body.items;
+
+  db.beginTransaction(err => {
+    if (err) {
+      return res.status(500).json({ msg: "Transaction start error", err });
+    }
+
+    const promises = items.map(item => {
+      return new Promise((resolve, reject) => {
+        const updateStock = `UPDATE products SET quantity_present = quantity_present - ? WHERE product_id = ?`;
+        db.query(updateStock, [item.quantity, item.product_id], (err) => {
+          if (err) return reject("Error updating stock: " + err);
+
+          const insertSale = `
+            INSERT INTO sales (product_id, quantity_sold, sold_price, revenue)
+            VALUES (?, ?, ?, ?)
+          `;
+          const values = [item.product_id, item.quantity, item.price, item.final_price];
+          db.query(insertSale, values, (err) => {
+            if (err) return reject("Error inserting into sales: " + err);
+            resolve();
+          });
+        });
+      });
+    });
+
+    Promise.all(promises)
+      .then(() => {
+        db.commit(err => {
+          if (err) {
+            return db.rollback(() => {
+              res.status(500).json({ msg: "Commit error", err });
+            });
+          }
+          res.json({ msg: "Sales recorded successfully" });
+        });
+      })
+      .catch(err => {
+        db.rollback(() => {
+          res.status(500).json({ msg: "Transaction failed", err });
+        });
+      });
+  });
+});
+
 
 
 
