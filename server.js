@@ -222,6 +222,9 @@ app.post('/payment', express.json(), (req, res) => {
           const insertSale = `
             INSERT INTO sales (product_id, quantity_sold, sold_price, revenue)
             VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE
+                quantity_sold = quantity_sold + VALUES(quantity_sold),
+                revenue = revenue + VALUES(revenue);
           `;
           const values = [item.product_id, item.quantity, item.price, item.final_price];
           db.query(insertSale, values, (err) => {
