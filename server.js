@@ -188,6 +188,7 @@ app.post('/makebill', express.json(), (req, res) => {
         const final_price = total - (total * discount / 100);
 
         return {
+          product_id: p.product_id,
           product_name: p.product_name,
           quantity: qty,
           price: p.sp,
