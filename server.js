@@ -8,8 +8,8 @@ app.use(cors());
 
 const axios = require("axios");
 
-const token = "EAAQU1zZCG6YIBP00UqD0FypJKxf0PszfmjUdDRpNdFEkjSK2AQ3YNbUWdYXLbTcZBSIYGONSz1zXGef0nNbdS4rQvozKoj1pUeNMh4L2cmUJM8aOfgQpVliH5mRt3ssRWTEICccXfjMOCmcZBZAP3ju11mq4ZBbb0hxd70ELZBGmZBXcxJR7u3IM5RWf4n2EAZDZD";
-const phone_number_id = "816150451585128";
+const token = process.env.token;
+const phone_number_id = process.env.phno;
 
 async function sendTemplateMessage(toNumber) {
   try {
