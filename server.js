@@ -6,6 +6,64 @@ require('dotenv').config();
 const app = express();
 app.use(cors());
 
+const axios = require("axios");
+
+const token = "EAAQU1zZCG6YIBP00UqD0FypJKxf0PszfmjUdDRpNdFEkjSK2AQ3YNbUWdYXLbTcZBSIYGONSz1zXGef0nNbdS4rQvozKoj1pUeNMh4L2cmUJM8aOfgQpVliH5mRt3ssRWTEICccXfjMOCmcZBZAP3ju11mq4ZBbb0hxd70ELZBGmZBXcxJR7u3IM5RWf4n2EAZDZD";
+const phone_number_id = "816150451585128";
+
+async function sendTemplateMessage(toNumber) {
+  try {
+    const res = await axios.post(
+      `https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: toNumber,
+        type: "template",
+        template: {
+          name: "hello_world",      
+          language: { code: "en_US" }
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+  } catch (err) {
+    console.error("❌ Error sending template:", err.response?.data || err.message);
+  }
+}
+
+app.post('/sendbill', express.json(), (req,res) => {
+    const toNumber = req.body.phone_number;
+
+    try {
+      axios.post(
+      `https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
+      {
+        messaging_product: "whatsapp",
+        to: toNumber,
+        type: "template",
+        template: {
+          name: "hello_world",      
+          language: { code: "en_US" }
+        }
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json"
+        }
+      }
+    );
+    res.json({msg: "bill sent succesfully"});
+  } catch (err) {
+    res.json({msg: "error in sending bill" + err});
+  }
+
+})
 
 const db = mysql.createConnection(process.env.DB_URL);
 db.connect((err) => {
