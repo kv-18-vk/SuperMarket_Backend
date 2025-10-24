@@ -36,34 +36,7 @@ async function sendTemplateMessage(toNumber) {
   }
 }
 
-app.post('/sendbill', express.json(), (req,res) => {
-    const toNumber = req.body.phone_number;
 
-    try {
-      axios.post(
-      `https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
-      {
-        messaging_product: "whatsapp",
-        to: toNumber,
-        type: "template",
-        template: {
-          name: "hello_world",      
-          language: { code: "en_US" }
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-    res.json({msg: "bill sent succesfully"});
-  } catch (err) {
-    res.json({msg: "error in sending bill" + err});
-  }
-
-})
 
 const db = mysql.createConnection(process.env.DB_URL);
 db.connect((err) => {
@@ -265,6 +238,7 @@ app.post('/makebill', express.json(), (req, res) => {
 app.post('/payment', express.json(), (req, res) => {
 
   const items = req.body.items;
+  const phone_number = req.body.phone_number;
 
   db.beginTransaction(err => {
     if (err) {
@@ -295,13 +269,18 @@ app.post('/payment', express.json(), (req, res) => {
 
     Promise.all(promises)
       .then(() => {
-        db.commit(err => {
+        db.commit(async (err) => {
           if (err) {
             return db.rollback(() => {
               res.status(500).json({ msg: "Commit error", err });
             });
           }
-          res.json({ msg: "Sales recorded successfully" });
+          try {
+            await sendTemplateMessage(phone_number);
+            res.json({ msg: "Sales recorded successfully and WhatsApp bill sent" });
+          } catch (error) {
+            res.json({ msg: "Sales recorded successfully, but WhatsApp bill not sent"+error });
+          }
         });
       })
       .catch(err => {
