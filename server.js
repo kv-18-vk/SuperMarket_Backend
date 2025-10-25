@@ -33,6 +33,7 @@ async function sendTemplateMessage(toNumber) {
     );
   } catch (err) {
     console.error("❌ Error sending template:", err.response?.data || err.message);
+    console.log(toNumber)
   }
 }
 
