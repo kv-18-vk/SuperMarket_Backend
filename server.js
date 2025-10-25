@@ -1,42 +1,9 @@
 const express = require('express');
 const cors = require('cors');
-const fs = require('fs');
 const mysql = require('mysql2');
 require('dotenv').config();
 const app = express();
 app.use(cors());
-
-const axios = require("axios");
-
-const token = process.env.token;
-const phone_number_id = process.env.phno;
-
-async function sendTemplateMessage(toNumber) {
-  try {
-    const res = await axios.post(
-      `https://graph.facebook.com/v22.0/${phone_number_id}/messages`,
-      {
-        messaging_product: "whatsapp",
-        to: toNumber,
-        type: "template",
-        template: {
-          name: "hello_world",      
-          language: { code: "en_US" }
-        }
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      }
-    );
-  } catch (err) {
-    console.error("❌ Error sending template:", err.response?.data || err.message);
-    console.log(toNumber);
-  }
-}
-
 
 
 const db = mysql.createConnection(process.env.DB_URL);
@@ -270,23 +237,18 @@ app.post('/payment', express.json(), (req, res) => {
 
     Promise.all(promises)
       .then(() => {
-        db.commit(async (err) => {
+        db.commit(err => {
           if (err) {
             return db.rollback(() => {
               res.status(500).json({ msg: "Commit error", err });
             });
           }
-          try {
-            await sendTemplateMessage(phone_number);
-            res.json({ msg: "Sales recorded successfully and WhatsApp bill sent" });
-          } catch (error) {
-            res.json({ msg: "Sales recorded successfully, but WhatsApp bill not sent"+error });
-          }
+          res.json({msg: "sales recorded succesfully"})
         });
       })
       .catch(err => {
         db.rollback(() => {
-          res.status(500).json({ msg: "Transaction failed", err });
+          res.status(500).json({ msg: "sales recording failed", err });
         });
       });
   });
