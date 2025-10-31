@@ -306,7 +306,7 @@ app.get("/api/profits/byProduct", (req, res) => {
   });
 });
 
-app.get("/api/profits/byDateRange", (req, res) => {
+app.post("/api/profits/byDateRange", express.json() , (req, res) => {
   const { from, to } = req.body;
   const sql = `
     SELECT 
