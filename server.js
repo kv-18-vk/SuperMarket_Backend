@@ -307,7 +307,7 @@ app.get("/api/profits/byProduct", (req, res) => {
 });
 
 app.get("/api/profits/byDateRange", (req, res) => {
-  const { from, to } = req.query;
+  const { from, to } = req.body;
   const sql = `
     SELECT 
       s.date,
