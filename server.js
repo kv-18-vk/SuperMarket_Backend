@@ -255,7 +255,77 @@ app.post('/payment', express.json(), (req, res) => {
 });
 
 
+app.get("/api/profits/summary", (req, res) => {
+  const sql = `
+    SELECT 
+      SUM(s.revenue) AS total_revenue,
+      SUM(s.quantity_sold * d.cp) AS total_cost,
+      (SUM(s.revenue) - SUM(s.quantity_sold * d.cp)) AS total_profit
+    FROM sales s
+    JOIN delivery d ON s.product_id = d.product_id
+  `;
+  db.query(sql, (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.json(data[0]);
+  });
+});
 
+app.get("/api/profits/byCategory", (req, res) => {
+  const sql = `
+    SELECT 
+      su.category,
+      SUM(s.revenue) AS revenue,
+      SUM(s.quantity_sold * d.cp) AS cost,
+      (SUM(s.revenue) - SUM(s.quantity_sold * d.cp)) AS profit
+    FROM sales s
+    JOIN delivery d ON s.product_id = d.product_id
+    JOIN supplier su ON d.supplier_id = su.supplier_id
+    GROUP BY su.category
+  `;
+  db.query(sql, (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.json(data);
+  });
+});
+
+app.get("/api/profits/byProduct", (req, res) => {
+  const sql = `
+    SELECT 
+      s.product_id,
+      p.product_name,
+      SUM(s.revenue) AS revenue,
+      SUM(s.quantity_sold * d.cp) AS cost,
+      (SUM(s.revenue) - SUM(s.quantity_sold * d.cp)) AS profit
+    FROM sales s
+    JOIN products p ON s.product_id = p.product_id
+    JOIN delivery d ON s.product_id = d.product_id
+    GROUP BY s.product_id, p.product_name
+  `;
+  db.query(sql, (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.json(data);
+  });
+});
+
+app.get("/api/profits/byDateRange", (req, res) => {
+  const { from, to } = req.query;
+  const sql = `
+    SELECT 
+      s.date,
+      SUM(s.revenue) AS revenue,
+      SUM(s.quantity_sold * d.cp) AS cost,
+      (SUM(s.revenue) - SUM(s.quantity_sold * d.cp)) AS profit
+    FROM sales s
+    JOIN delivery d ON s.product_id = d.product_id
+    WHERE s.date BETWEEN ? AND ?
+    GROUP BY s.date
+    ORDER BY s.date ASC
+  `;
+  db.query(sql, [from, to], (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.json(data);
+  });
+});
 
 
 app.listen(3000, () => {
