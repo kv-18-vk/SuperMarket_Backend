@@ -335,6 +335,7 @@ app.post("/api/profits/byProduct", express.json(), (req, res) => {
     JOIN delivery d ON s.product_id = d.product_id
     WHERE s.date BETWEEN ? AND ?
     GROUP BY s.product_id, d.product_name
+    ORDER BY profit DESC
   `;
   db.query(sql, [from,to] ,(err, data) => {
     if (err) return res.status(500).json(err);
