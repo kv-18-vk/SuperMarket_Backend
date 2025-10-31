@@ -308,6 +308,16 @@ app.get("/api/profits/byProduct", (req, res) => {
 
 app.post("/api/profits/byDateRange", express.json() , (req, res) => {
   const { from, to } = req.body;
+
+  if (!from || !to) {
+    const today = new Date();
+    const past30 = new Date();
+    past30.setDate(today.getDate() - 30);
+
+    from = past30.toISOString().split("T")[0];
+    to = today.toISOString().split("T")[0];
+  }
+
   const sql = `
     SELECT 
       s.date,
@@ -325,6 +335,7 @@ app.post("/api/profits/byDateRange", express.json() , (req, res) => {
     res.json(data);
   });
 });
+
 
 
 app.listen(3000, () => {
