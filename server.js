@@ -255,7 +255,18 @@ app.post('/payment', express.json(), (req, res) => {
 });
 
 
-app.get("/api/profits/summary", (req, res) => {
+app.post("/api/profits/summary", express.json() , (req, res) => {
+  const { from, to } = req.body;
+
+  if (!from || !to) {
+    const today = new Date();
+    const past30 = new Date();
+    past30.setDate(today.getDate() - 30);
+
+    from = past30.toISOString().split("T")[0];
+    to = today.toISOString().split("T")[0];
+  }
+
   const sql = `
     SELECT 
       SUM(s.revenue) AS total_revenue,
@@ -263,14 +274,26 @@ app.get("/api/profits/summary", (req, res) => {
       (SUM(s.revenue) - SUM(s.quantity_sold * d.cp)) AS total_profit
     FROM sales s
     JOIN delivery d ON s.product_id = d.product_id
+    WHERE s.date BETWEEN ? AND ?
   `;
-  db.query(sql, (err, data) => {
+  db.query(sql,[from,to] ,(err, data) => {
     if (err) return res.status(500).json(err);
     res.json(data[0]);
   });
 });
 
-app.get("/api/profits/byCategory", (req, res) => {
+app.post("/api/profits/byCategory", express.json() , (req, res) => {
+  const { from, to } = req.body;
+
+  if (!from || !to) {
+    const today = new Date();
+    const past30 = new Date();
+    past30.setDate(today.getDate() - 30);
+
+    from = past30.toISOString().split("T")[0];
+    to = today.toISOString().split("T")[0];
+  }
+
   const sql = `
     SELECT 
       su.category,
@@ -280,15 +303,27 @@ app.get("/api/profits/byCategory", (req, res) => {
     FROM sales s
     JOIN delivery d ON s.product_id = d.product_id
     JOIN supplier su ON d.supplier_id = su.supplier_id
+    WHERE s.date BETWEEN ? AND ?
     GROUP BY su.category
   `;
-  db.query(sql, (err, data) => {
+  db.query(sql, [from , to] , (err, data) => {
     if (err) return res.status(500).json(err);
     res.json(data);
   });
 });
 
-app.get("/api/profits/byProduct", (req, res) => {
+app.post("/api/profits/byProduct", express.json(), (req, res) => {
+  const { from, to } = req.body;
+
+  if (!from || !to) {
+    const today = new Date();
+    const past30 = new Date();
+    past30.setDate(today.getDate() - 30);
+
+    from = past30.toISOString().split("T")[0];
+    to = today.toISOString().split("T")[0];
+  }
+
   const sql = `
     SELECT 
       s.product_id,
@@ -298,9 +333,10 @@ app.get("/api/profits/byProduct", (req, res) => {
       (SUM(s.revenue) - SUM(s.quantity_sold * d.cp)) AS profit
     FROM sales s
     JOIN delivery d ON s.product_id = d.product_id
+    WHERE s.date BETWEEN ? AND ?
     GROUP BY s.product_id, d.product_name
   `;
-  db.query(sql, (err, data) => {
+  db.query(sql, [from,to] ,(err, data) => {
     if (err) return res.status(500).json(err);
     res.json(data);
   });
