@@ -292,14 +292,13 @@ app.get("/api/profits/byProduct", (req, res) => {
   const sql = `
     SELECT 
       s.product_id,
-      p.product_name,
+      d.product_name,
       SUM(s.revenue) AS revenue,
       SUM(s.quantity_sold * d.cp) AS cost,
       (SUM(s.revenue) - SUM(s.quantity_sold * d.cp)) AS profit
     FROM sales s
-    JOIN products p ON s.product_id = p.product_id
     JOIN delivery d ON s.product_id = d.product_id
-    GROUP BY s.product_id, p.product_name
+    GROUP BY s.product_id, d.product_name
   `;
   db.query(sql, (err, data) => {
     if (err) return res.status(500).json(err);
