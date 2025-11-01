@@ -412,7 +412,7 @@ app.post("/api/loss/byProduct", express.json(), (req, res) => {
       e.product_id,
       e.quantity_expired,
       d.product_name,
-      SUM(e.loss) AS total_loss,
+      SUM(e.loss) AS total_loss
     FROM expired e
     JOIN delivery d ON e.product_id = d.product_id
     WHERE e.date_expired BETWEEN ? AND ?
