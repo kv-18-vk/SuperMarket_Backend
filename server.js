@@ -282,6 +282,30 @@ app.post("/api/profits/summary", express.json() , (req, res) => {
   });
 });
 
+app.post("/api/loss/summary", express.json() , (req, res) => {
+  const { from, to } = req.body;
+
+  if (!from || !to) {
+    const today = new Date();
+    const past30 = new Date();
+    past30.setDate(today.getDate() - 30);
+
+    from = past30.toISOString().split("T")[0];
+    to = today.toISOString().split("T")[0];
+  }
+
+  const sql = `
+    SELECT 
+      SUM(e.loss) AS total_loss,
+    FROM expired e
+    WHERE e.date_expired BETWEEN ? AND ?
+  `;
+  db.query(sql,[from,to] ,(err, data) => {
+    if (err) return res.status(500).json(err);
+    res.json(data[0]);
+  });
+});
+
 app.post("/api/profits/byCategory", express.json() , (req, res) => {
   const { from, to } = req.body;
 
