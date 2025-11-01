@@ -336,6 +336,34 @@ app.post("/api/profits/byCategory", express.json() , (req, res) => {
   });
 });
 
+app.post("/api/loss/byCategory", express.json() , (req, res) => {
+  const { from, to } = req.body;
+
+  if (!from || !to) {
+    const today = new Date();
+    const past30 = new Date();
+    past30.setDate(today.getDate() - 30);
+
+    from = past30.toISOString().split("T")[0];
+    to = today.toISOString().split("T")[0];
+  }
+
+  const sql = `
+    SELECT 
+      su.category,
+      SUM(e.loss) AS total_loss
+    FROM expired e
+    JOIN delivery d ON e.product_id = d.product_id
+    JOIN supplier su ON d.supplier_id = su.supplier_id
+    WHERE e.date_expired BETWEEN ? AND ?
+    GROUP BY su.category
+  `;
+  db.query(sql, [from , to] , (err, data) => {
+    if (err) return res.status(500).json(err);
+    res.json(data);
+  });
+});
+
 app.post("/api/profits/byProduct", express.json(), (req, res) => {
   const { from, to } = req.body;
 
