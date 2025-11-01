@@ -296,9 +296,9 @@ app.post("/api/loss/summary", express.json() , (req, res) => {
 
   const sql = `
     SELECT 
-      SUM(e.loss) AS total_loss,
-    FROM expired e
-    WHERE e.date_expired BETWEEN ? AND ?
+      SUM(loss) AS total_loss,
+    FROM expired 
+    WHERE date_expired BETWEEN ? AND ?
   `;
   db.query(sql,[from,to] ,(err, data) => {
     if (err) return res.status(500).json(err);
