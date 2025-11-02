@@ -464,11 +464,11 @@ app.post('/report/monthly-stats', express.json(),  (req, res) => {
       COALESCE(SUM(sales_profit), 0) AS total_profit,
       COALESCE(SUM(expired_loss), 0) AS total_loss
     FROM (
-      SELECT date, SUM(profit) AS sales_profit, 0 AS expired_loss
+      SELECT date, SUM(revenue) AS sales_profit, 0 AS expired_loss
       FROM sales WHERE YEAR(date) = ?
       GROUP BY MONTH(date)
       UNION ALL
-      SELECT date, 0 AS sales_profit, SUM(loss) AS expired_loss
+      SELECT date_expired, 0 AS sales_profit, SUM(loss) AS expired_loss
       FROM expired WHERE YEAR(date) = ?
       GROUP BY MONTH(date)
     ) AS combined
@@ -488,11 +488,11 @@ app.get('/report/yearly-stats', express.json() , (req, res) => {
       COALESCE(SUM(sales_profit), 0) AS total_profit,
       COALESCE(SUM(expired_loss), 0) AS total_loss
     FROM (
-      SELECT date, SUM(profit) AS sales_profit, 0 AS expired_loss
+      SELECT date, SUM(revenue) AS sales_profit, 0 AS expired_loss
       FROM sales
       GROUP BY YEAR(date)
       UNION ALL
-      SELECT date, 0 AS sales_profit, SUM(loss) AS expired_loss
+      SELECT date_expired, 0 AS sales_profit, SUM(loss) AS expired_loss
       FROM expired
       GROUP BY YEAR(date)
     ) AS combined
