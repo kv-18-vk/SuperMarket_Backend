@@ -460,20 +460,20 @@ app.post('/report/monthly-stats', express.json(),  (req, res) => {
   const { year } = req.body;
   const query = `
     SELECT 
-      MONTH(date) AS month,
+      month,
       COALESCE(SUM(sales_profit), 0) AS total_profit,
       COALESCE(SUM(expired_loss), 0) AS total_loss
     FROM (
-      SELECT date, SUM(revenue) AS sales_profit, 0 AS expired_loss
+      SELECT MONTH(date) as month, SUM(revenue) AS sales_profit, 0 AS expired_loss
       FROM sales WHERE YEAR(date) = ?
-      GROUP BY MONTH(date)
+      GROUP BY month
       UNION ALL
-      SELECT date_expired, 0 AS sales_profit, SUM(loss) AS expired_loss
-      FROM expired WHERE YEAR(date) = ?
-      GROUP BY MONTH(date)
+      SELECT MONTH(date_expired) as month, 0 AS sales_profit, SUM(loss) AS expired_loss
+      FROM expired WHERE YEAR(date_expired) = ?
+      GROUP BY month
     ) AS combined
-    GROUP BY MONTH(date)
-    ORDER BY MONTH(date);
+    GROUP BY month
+    ORDER BY month;
   `;
   db.query(query , [year,year] , (err,data)=>{
     if (err) return res.status(500).json(err);
@@ -484,20 +484,20 @@ app.post('/report/monthly-stats', express.json(),  (req, res) => {
 app.get('/report/yearly-stats', express.json() , (req, res) => {
   const query = `
     SELECT 
-      YEAR(date) AS year,
+      year,
       COALESCE(SUM(sales_profit), 0) AS total_profit,
       COALESCE(SUM(expired_loss), 0) AS total_loss
     FROM (
-      SELECT date, SUM(revenue) AS sales_profit, 0 AS expired_loss
+      SELECT YEAR(date) as year, SUM(revenue) AS sales_profit, 0 AS expired_loss
       FROM sales
-      GROUP BY YEAR(date)
+      GROUP BY year
       UNION ALL
-      SELECT date_expired, 0 AS sales_profit, SUM(loss) AS expired_loss
+      SELECT YEAR(date_expired) as year, 0 AS sales_profit, SUM(loss) AS expired_loss
       FROM expired
-      GROUP BY YEAR(date)
+      GROUP BY year
     ) AS combined
-    GROUP BY YEAR(date)
-    ORDER BY YEAR(date);
+    GROUP BY year
+    ORDER BY year;
   `;
   db.query(query , (err,data)=>{
     if (err) return res.status(500).json(err);
