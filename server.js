@@ -456,6 +456,55 @@ app.post("/api/profits/byDateRange", express.json() , (req, res) => {
 });
 
 
+app.post('/report/monthly-stats', express.json(),  (req, res) => {
+  const { year } = req.body;
+  const query = `
+    SELECT 
+      MONTH(date) AS month,
+      COALESCE(SUM(sales_profit), 0) AS total_profit,
+      COALESCE(SUM(expired_loss), 0) AS total_loss
+    FROM (
+      SELECT date, SUM(profit) AS sales_profit, 0 AS expired_loss
+      FROM sales WHERE YEAR(date) = ?
+      GROUP BY MONTH(date)
+      UNION ALL
+      SELECT date, 0 AS sales_profit, SUM(loss) AS expired_loss
+      FROM expired WHERE YEAR(date) = ?
+      GROUP BY MONTH(date)
+    ) AS combined
+    GROUP BY MONTH(date)
+    ORDER BY MONTH(date);
+  `;
+  db.query(query , [year,year] , (err,data)=>{
+    if (err) return res.status(500).json(err);
+    res.json(data);
+  });
+});
+
+app.get('/report/yearly-stats', express.json() , (req, res) => {
+  const query = `
+    SELECT 
+      YEAR(date) AS year,
+      COALESCE(SUM(sales_profit), 0) AS total_profit,
+      COALESCE(SUM(expired_loss), 0) AS total_loss
+    FROM (
+      SELECT date, SUM(profit) AS sales_profit, 0 AS expired_loss
+      FROM sales
+      GROUP BY YEAR(date)
+      UNION ALL
+      SELECT date, 0 AS sales_profit, SUM(loss) AS expired_loss
+      FROM expired
+      GROUP BY YEAR(date)
+    ) AS combined
+    GROUP BY YEAR(date)
+    ORDER BY YEAR(date);
+  `;
+  db.query(query , (err,data)=>{
+    if (err) return res.status(500).json(err);
+    res.json(data);
+  });
+});
+
 
 app.listen(3000, () => {
   console.log('Server is - is running on port 3000');
