@@ -464,10 +464,10 @@ app.post('/report/monthly-stats', express.json(),  (req, res) => {
       COALESCE(SUM(sales_profit), 0) AS total_profit,
       COALESCE(SUM(expired_loss), 0) AS total_loss
     FROM (
-      SELECT MONTH(date) as month, (SUM(s.revenue)-SUM(s.quantity_sold * d.cp)) AS sales_profit, 0 AS expired_loss
+      SELECT MONTH(s.date) as month, (SUM(s.revenue)-SUM(s.quantity_sold * d.cp)) AS sales_profit, 0 AS expired_loss
       FROM sales s
       JOIN delivery d ON s.product_id = d.product_id
-      WHERE YEAR(date) = ?
+      WHERE YEAR(s.date) = ?
       GROUP BY month
       UNION ALL
       SELECT MONTH(date_expired) as month, 0 AS sales_profit, SUM(loss) AS expired_loss
