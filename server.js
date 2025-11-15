@@ -42,6 +42,18 @@ app.get('/staff', (req, res) => {
         return res.json(rows);
     });
 });
+app.post('/staff/update' , express.json() , (req,res) => {
+    const data = req.body;
+    const q = 'UPDATE employee SET name = ? , designation = ? , password = ? , daily_wage = ? , status = ? WHERE employee_id = ?';
+    const values = [data.name , data.designation , data.password , data.daily_wage , data.status , data.employee_id];
+    db.query(q, values , (err,result) => {
+        if(err) {
+          console.log('Error updating the employee data :' ,err);
+          return res.send(err);
+        }
+        return res.send("Employee updated succesfully");
+    });
+});
 app.get('/suppliers', (req, res) => {
     const q = 'SELECT * FROM supplier'; 
     db.query(q, (err, rows) => {
