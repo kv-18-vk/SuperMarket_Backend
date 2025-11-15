@@ -3,9 +3,13 @@ const cors = require('cors');
 const mysql = require('mysql2');
 require('dotenv').config();
 const app = express();
+const http = require('http');
+const server = http.createServer(app);
 app.use(cors());
 
-
+const io = require("socket.io")(server, {
+  cors: { origin: "*" }
+});
 const db = mysql.createConnection(process.env.DB_URL);
 db.connect((err) => {
     if (err) {
@@ -20,8 +24,8 @@ app.get('/', (req, res) => {
 });
 app.post('/login', express.json(), (req, res) => {
     const data = req.body;
-    const q = 'SELECT name, designation FROM employee WHERE employee_id = ? AND password = ? AND designation IN (?, ?, ?)';
-    const values = [data.employee_id, data.password,'manager','cashier','admin'];
+    const q = 'SELECT name, designation FROM employee WHERE employee_id = ? AND password = ? AND status = ?';
+    const values = [data.employee_id, data.password, 'Working'];
     db.query(q, values, (err, rows) => {
         if (err) {
             return res.json("Error occured: "+err);
@@ -44,7 +48,7 @@ app.get('/staff', (req, res) => {
 });
 app.post('/staff/update' , express.json() , (req,res) => {
     const data = req.body;
-    const q = 'UPDATE employee SET name = ? , designation = ? , password = ? , daily_wage = ? , status = ? WHERE employee_id = ?';
+    const q = 'UPDATE employee SET name = ? , designation = ? , password = ? , Daily_wage = ? , status = ? WHERE employee_id = ?';
     const values = [data.name , data.designation , data.password , data.daily_wage , data.status , data.employee_id];
     db.query(q, values , (err,result) => {
         if(err) {
@@ -255,7 +259,8 @@ app.post('/payment', express.json(), (req, res) => {
               res.status(500).json({ msg: "Commit error", err });
             });
           }
-          res.json({msg: "sales recorded succesfully"})
+          res.json({msg: "sales recorded succesfully"});
+          io.emit("stockUpdated");
         });
       })
       .catch(err => {
@@ -521,6 +526,6 @@ app.get('/report/yearly-stats', express.json() , (req, res) => {
 });
 
 
-app.listen(3000, () => {
+server.listen(3000, () => {
   console.log('Server is - is running on port 3000');
 });
