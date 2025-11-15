@@ -55,6 +55,7 @@ app.post('/staff/update' , express.json() , (req,res) => {
           console.log('Error updating the employee data :' ,err);
           return res.send(err);
         }
+        io.emit("statusChanged:" + data.employee_id, data.status);
         return res.send("Employee updated succesfully");
     });
 });
