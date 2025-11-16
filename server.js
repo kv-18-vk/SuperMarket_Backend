@@ -10,14 +10,12 @@ app.use(cors());
 const io = require("socket.io")(server, {
   cors: { origin: "*" }
 });
-const db = mysql.createConnection(process.env.DB_URL);
-db.connect((err) => {
-    if (err) {
-        console.log('Error connecting to MySQL database:', err);
-        return;
-    }  
-    console.log('Connected to MySQL database.');
-})
+const db = mysql.createPool({
+    uri: process.env.DB_URL,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+});
 
 app.get('/', (req, res) => {
     res.json('Hello this is the backend');
