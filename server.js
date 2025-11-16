@@ -38,8 +38,7 @@ app.get('/staff', (req, res) => {
     const q = 'SELECT * FROM employee'; 
     db.query(q, (err, rows) => {
         if (err) {
-            console.log('Error fetching employee data:', err);
-            return res.send(err);
+            return res.json({error: err});
         }
         return res.json(rows);
     });
@@ -61,8 +60,7 @@ app.get('/suppliers', (req, res) => {
     const q = 'SELECT * FROM supplier'; 
     db.query(q, (err, rows) => {
         if (err) {
-            console.log('Error fetching employee data:', err);
-            return res.send(err);
+            return res.json({error: err});
         }
         return res.json(rows);
     });
@@ -71,8 +69,7 @@ app.get('/deliveries', (req,res) => {
     const q = 'SELECT * FROM delivery ORDER BY product_id DESC';
     db.query(q, (err,rows) => {
         if (err) {
-            console.log('Error fetching delivery data:', err);
-            return res.send(err);
+            return res.json({error: err});
         }
         return res.json(rows);
     })
@@ -81,8 +78,7 @@ app.get('/stock', (req,res) => {
     const q = 'SELECT p.product_id,d.product_name,p.quantity_present,p.sp,p.discount_in_percent,p.expiry_date FROM products p JOIN delivery d ON p.product_id = d.product_id;';
     db.query(q, (err,rows) => {
         if (err) {
-            console.log('Error fetching stock data:', err);
-            return res.send(err);
+            return res.json({error : err});
         }
         return res.json(rows);
     })
@@ -91,8 +87,7 @@ app.get('/expired', (req,res) => {
     const q = 'SELECT * FROM expired';
     db.query(q, (err,rows) => {
         if (err) {
-            console.log('Error fetching expiry data:', err);
-            return res.send(err);
+            return res.json({errpr : err});
         }
         return res.json(rows);
     })
@@ -255,7 +250,7 @@ app.post('/payment', express.json(), (req, res) => {
         db.commit(err => {
           if (err) {
             return db.rollback(() => {
-              res.status(500).json({ msg: "Commit error", err });
+              res.status(500).json({ error: "Commit error", err });
             });
           }
           res.json({msg: "sales recorded succesfully"});
@@ -293,7 +288,7 @@ app.post("/api/profits/summary", express.json() , (req, res) => {
     WHERE s.date BETWEEN ? AND ?
   `;
   db.query(sql,[from,to] ,(err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data[0]);
   });
 });
@@ -317,7 +312,7 @@ app.post("/api/loss/summary", express.json() , (req, res) => {
     WHERE date_expired BETWEEN ? AND ?
   `;
   db.query(sql,[from,to] ,(err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data[0]);
   });
 });
@@ -347,7 +342,7 @@ app.post("/api/profits/byCategory", express.json() , (req, res) => {
     GROUP BY su.category
   `;
   db.query(sql, [from , to] , (err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data);
   });
 });
@@ -375,7 +370,7 @@ app.post("/api/loss/byCategory", express.json() , (req, res) => {
     GROUP BY su.category
   `;
   db.query(sql, [from , to] , (err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data);
   });
 });
@@ -406,7 +401,7 @@ app.post("/api/profits/byProduct", express.json(), (req, res) => {
     ORDER BY profit DESC
   `;
   db.query(sql, [from,to] ,(err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data);
   });
 });
@@ -436,7 +431,7 @@ app.post("/api/loss/byProduct", express.json(), (req, res) => {
     ORDER BY total_loss DESC
   `;
   db.query(sql, [from,to] ,(err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data);
   });
 });
@@ -466,7 +461,7 @@ app.post("/api/profits/byDateRange", express.json() , (req, res) => {
     ORDER BY s.date ASC
   `;
   db.query(sql, [from, to], (err, data) => {
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data);
   });
 });
@@ -494,7 +489,7 @@ app.post('/report/monthly-stats', express.json(),  (req, res) => {
     ORDER BY month;
   `;
   db.query(query , [year,year] , (err,data)=>{
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data);
   });
 });
@@ -519,7 +514,7 @@ app.get('/report/yearly-stats', express.json() , (req, res) => {
     ORDER BY year;
   `;
   db.query(query , (err,data)=>{
-    if (err) return res.status(500).json(err);
+    if (err) return res.status(500).json({error : err});
     res.json(data);
   });
 });
