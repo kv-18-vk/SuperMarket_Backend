@@ -114,46 +114,58 @@ app.post('/suppliers/Add', express.json(), (req, res) => {
         return res.send("Supplier added successfully");
     });
 });
+
 app.post('/deliveries/Add', express.json(), (req, res) => {
     const data = req.body;
 
-    db.beginTransaction((err) => {
-        if (err) {
-            return res.send("Error: " + err);
-        }
+    db.getConnection((err, conn) => {
+        if (err) return res.send("Connection Error: " + err);
 
-        const q = 'INSERT INTO delivery (supplier_id, employee_id, product_name, quantity, cp, expenses) VALUES (?, ?, ?, ?, ?, ?)';
-        const values = [data.supp, data.emp, data.name, data.quantity, data.cp, data.expenses];
-
-        db.query(q, values, (err, result) => {
+        conn.beginTransaction(err => {
             if (err) {
-                return db.rollback(() => {
-                    res.send("Error occured for delivery entry: " + err);
-                });
+                conn.release();
+                return res.send("Transaction Error: " + err);
             }
 
-            const q1 = 'INSERT INTO products ( quantity_present, sp, expiry_date) VALUES ( ?, ?, ?)';
-            const values1 = [ data.quantity, data.sp, data.exp];
+            const q = 'INSERT INTO delivery (supplier_id, employee_id, product_name, quantity, cp, expenses) VALUES (?, ?, ?, ?, ?, ?)';
+            const values = [data.supp, data.emp, data.name, data.quantity, data.cp, data.expenses];
 
-            db.query(q1, values1, (err, result1) => {
+            conn.query(q, values, (err, result) => {
                 if (err) {
-                    return db.rollback(() => {
-                        res.send("Error occured for stock entry: " + err);
+                    return conn.rollback(() => {
+                        conn.release();
+                        res.send("Error in delivery entry: " + err);
                     });
                 }
 
-                db.commit((err) => {
+                const q1 = 'INSERT INTO products (quantity_present, sp, expiry_date) VALUES (?, ?, ?)';
+                const values1 = [data.quantity, data.sp, data.exp];
+
+                conn.query(q1, values1, (err, result1) => {
                     if (err) {
-                        return db.rollback(() => {
-                            res.send("commit error: " + err);
+                        return conn.rollback(() => {
+                            conn.release();
+                            res.send("Error in product entry: " + err);
                         });
                     }
-                    res.send("Delivery & Stock entry successful");
+
+                    conn.commit(err => {
+                        if (err) {
+                            return conn.rollback(() => {
+                                conn.release();
+                                res.send("Commit Error: " + err);
+                            });
+                        }
+
+                        conn.release();
+                        res.send("Delivery & Stock entry successful");
+                    });
                 });
             });
         });
     });
 });
+
 
 app.post('/staff/deleteemployee', express.json(), (req, res) => {
     const data = req.body;
@@ -214,55 +226,66 @@ app.post('/makebill', express.json(), (req, res) => {
 });
 
 app.post('/payment', express.json(), (req, res) => {
+    const items = req.body.items;
 
-  const items = req.body.items;
-  const phone_number = req.body.phone_number;
+    db.getConnection((err, conn) => {
+        if (err) return res.status(500).json({ error: "Conn error: " + err });
 
-  db.beginTransaction(err => {
-    if (err) {
-      return res.status(500).json({ msg: "Transaction start error", err });
-    }
+        conn.beginTransaction(err => {
+            if (err) {
+                conn.release();
+                return res.status(500).json({ error: "Transaction Error: " + err });
+            }
 
-    const promises = items.map(item => {
-      return new Promise((resolve, reject) => {
-        const updateStock = `UPDATE products SET quantity_present = quantity_present - ? WHERE product_id = ?`;
-        db.query(updateStock, [item.quantity, item.product_id], (err) => {
-          if (err) return reject("Error updating stock: " + err);
+            const tasks = items.map(item => {
+                return new Promise((resolve, reject) => {
+                    const updateStock = `UPDATE products SET quantity_present = quantity_present - ? WHERE product_id = ?`;
 
-          const insertSale = `
-            INSERT INTO sales (product_id, quantity_sold, sold_price, revenue)
-            VALUES (?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                quantity_sold = quantity_sold + VALUES(quantity_sold),
-                revenue = revenue + VALUES(revenue);
-          `;
-          const values = [item.product_id, item.quantity, item.price, item.final_price];
-          db.query(insertSale, values, (err) => {
-            if (err) return reject("Error inserting into sales: " + err);
-            resolve();
-          });
-        });
-      });
-    });
+                    conn.query(updateStock, [item.quantity, item.product_id], err => {
+                        if (err) return reject("Stock update error: " + err);
 
-    Promise.all(promises)
-      .then(() => {
-        db.commit(err => {
-          if (err) {
-            return db.rollback(() => {
-              res.status(500).json({ error: "Commit error", err });
+                        const insertSale = `
+                            INSERT INTO sales (product_id, quantity_sold, sold_price, revenue)
+                            VALUES (?, ?, ?, ?)
+                            ON DUPLICATE KEY UPDATE 
+                                quantity_sold = quantity_sold + VALUES(quantity_sold),
+                                revenue = revenue + VALUES(revenue)
+                        `;
+                        const saleValues = [item.product_id, item.quantity, item.price, item.final_price];
+
+                        conn.query(insertSale, saleValues, err => {
+                            if (err) return reject("Sales insert error: " + err);
+                            resolve();
+                        });
+
+                    });
+                });
             });
-          }
-          res.json({msg: "sales recorded succesfully"});
-          io.emit("stockUpdated");
+
+            Promise.all(tasks)
+                .then(() => {
+                    conn.commit(err => {
+                        if (err) {
+                            return conn.rollback(() => {
+                                conn.release();
+                                res.status(500).json({ error: "Commit Error: " + err });
+                            });
+                        }
+
+                        conn.release();
+                        res.json({ msg: "Sales recorded successfully" });
+                        io.emit("stockUpdated");
+                    });
+                })
+                .catch(err => {
+                    conn.rollback(() => {
+                        conn.release();
+                        res.status(500).json({ msg: "Transaction failed", err });
+                    });
+                });
+
         });
-      })
-      .catch(err => {
-        db.rollback(() => {
-          res.status(500).json({ msg: "sales recording failed", err });
-        });
-      });
-  });
+    });
 });
 
 
