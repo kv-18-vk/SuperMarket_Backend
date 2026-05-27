@@ -47,7 +47,7 @@ Before running the application locally, ensure you have the following installed:
    *(Note: The project uses a connection URI string. Make sure to provide the valid credentials to connect to your MySQL instance.)*
 
 4. **Database Setup:**
-   Ensure your MySQL database has the required tables: `employee`, `supplier`, `delivery`, `products`, `expired`, and `sales`. Please follow the database details according to the report in the `SuperMarket` repository for the exact schemas and configurations.
+   Ensure your MySQL database has the required tables: `employee`, `supplier`, `delivery`, `products`, `expired`, and `sales`. Please follow the database details according to the report in the [SuperMarket](https://github.com/kv-18-vk/SuperMarket) repository for the exact schemas and configurations.
 
 ## Running the Server
 
